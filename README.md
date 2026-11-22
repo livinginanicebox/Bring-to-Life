@@ -46,8 +46,9 @@ Consequences a player sees and feels:
 | eight logs (40 kg, hearth limit) | 0.67 m² | 43 kW | 4 h 10 min |
 
 Burn-through time is `density × thickness / flux`, so it depends only on how thick the pieces are:
-4 h 10 min for logs, 50 min for planks, 12 min for sticks, whatever the pile size. Adding more of
-the same fuel makes the fire hotter, not longer; the area cap at 1 m² stops the growth at 4 g/s.
+4 h 10 min for logs, 50 min for planks, 12 min for sticks, as long as the pile's surface stays under
+the 1 m² cap. Adding more of the same fuel makes the fire hotter, not longer, until the hearth's
+surface is saturated at 4 g/s.
 
 A pile of thin wood is hot and short-lived; one thick log is a small fire that lasts the night.
 Adding more fuel makes the fire wider, not longer, until the hearth's surface is saturated.
@@ -56,8 +57,8 @@ Adding more fuel makes the fire wider, not longer, until the hearth's surface is
 
 Burning consumes oxygen and produces carbon dioxide in the stoichiometric ratio of cellulose,
 `C6H10O5 + 6 O2 -> 6 CO2 + 5 H2O`, with a lower heating value of 16.1 MJ/kg. Air is a conserved
-inventory of moles in the enclosing volume (27 m³ of air holds 235 mol of oxygen, 1.8 kg of wood's
-worth). Flaming combustion stops below an oxygen mole fraction of 0.15 (flaming/pyrolysis
+inventory of moles in the enclosing volume: 27 m³ of air holds 235 mol of oxygen, enough for 6.3 kg
+of wood in total, of which only the 1.8 kg above the 15 % floor can be reached. Flaming combustion stops below an oxygen mole fraction of 0.15 (flaming/pyrolysis
 transition measured at 4–15 % O₂, Richter, *Oxygen's effect on wood charring rate*), and a burn that
 would deliver less than the critical flux is extinguished rather than sustained: a fire whose fuel
 is too sparse to keep up 4.0 g/m²·s dies, which is why small isolated pieces cannot burn alone.
@@ -69,8 +70,8 @@ One closed door in a 27 m³ room is 1.6 air changes per hour, two are 3.2.
 
 Three outcomes, all from the same arithmetic:
 
-- **sealed 27 m³ room, one log (5.4 kW)**: oxygen falls to 0.15 in 1½ hours and the fire suffocates
-  with 1.8 kg of wood left unburned;
+- **sealed 27 m³ room, one log (5.4 kW)**: oxygen falls to 0.15 in 1½ hours, having burned 1.8 kg of
+  the log, and the fire suffocates with 3.2 kg of wood still in the hearth;
 - **sealed room, eight logs (43 kW)**: the same 1.8 kg of wood is gone in 11 minutes — the fire is
   over before the evening starts;
 - **closed door (1.6 ACH)**: leakage supplies ~2.8 g/s of wood's worth of oxygen. A single log
