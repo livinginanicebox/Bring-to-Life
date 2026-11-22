@@ -47,11 +47,11 @@ public record AirSpace(double volumeM3, GasMixture mixture, double airChangesPer
     }
 
     public AirSpace ventilate(double dtS) {
-        if (airChangesPerHour == 0.0 || dtS == 0.0) {
-            return this;
-        }
         if (!Double.isFinite(dtS) || dtS < 0.0) {
             throw new IllegalArgumentException("time step must be finite and non-negative");
+        }
+        if (airChangesPerHour == 0.0 || dtS == 0.0) {
+            return this;
         }
         double exchanged = 1.0 - Math.exp(-airChangesPerHour / 3600.0 * dtS);
         return new AirSpace(volumeM3, mixture.blendedWith(Air.freshAir(volumeM3), exchanged), airChangesPerHour);

@@ -142,7 +142,14 @@ class AirSpaceTest {
             space = result.space();
         }
 
-        assertEquals(0.203, space.oxygenMoleFraction(), 0.01);
+        double airMolesPerM3 = Air.freshAir(27.0).totalMoles() / 27.0;
+        double inflowMolPerS = 30.0 / 3600.0 * 27.0 * airMolesPerM3;
+        double demandMolPerS = rate * Fuel.LOG.oxygenDemandMolPerKg();
+        double freshOxygen = AirSpace.sealed(27.0).oxygenMoleFraction();
+        double steadyState = freshOxygen - demandMolPerS / inflowMolPerS;
+
+        assertEquals(0.1858, steadyState, 1e-3);
+        assertEquals(steadyState, space.oxygenMoleFraction(), 5e-4);
         assertTrue(space.carbonDioxideMoleFraction() > 0.0);
     }
 
