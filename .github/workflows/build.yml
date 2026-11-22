@@ -5,6 +5,9 @@ on:
     branches: ["arena/4bb8ee31-bring-to-life"]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,7 +21,19 @@ jobs:
         with:
           gradle-version: '8.7'
       - name: Build and test
-        run: gradle build --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          gradle build --no-daemon --stacktrace --console=plain 2>&1 | tee build.log > /dev/null
+      - name: Report failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          grep -E "error: |FAILED|What went wrong|Could not resolve|Caused by:" build.log | head -25 | while IFS= read -r line; do
+            echo "::error title=gradle::$line"
+          done
+          gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
+            -f body="$(printf 'CI build failed:\n\n%s' "$(tail -c 5000 build.log)")" || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
