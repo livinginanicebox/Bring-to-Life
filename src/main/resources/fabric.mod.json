@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "bringtolife",
+  "version": "${version}",
+  "name": "Bring to Life",
+  "description": "Combustion that is limited by the oxygen actually present in the space around it.",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.bringtolife.BringToLife"]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "~1.20.1",
+    "java": ">=17"
+  }
+}

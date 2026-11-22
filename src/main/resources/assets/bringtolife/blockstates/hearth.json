@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "lit=false": { "model": "bringtolife:block/hearth" },
+    "lit=true": { "model": "bringtolife:block/hearth_lit" }
+  }
+}
