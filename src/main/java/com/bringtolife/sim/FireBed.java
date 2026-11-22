@@ -2,7 +2,7 @@ package com.bringtolife.sim;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +10,7 @@ public final class FireBed {
 
     public static final double MAX_EXPOSED_AREA_M2 = 1.0;
 
-    private final EnumMap<Fuel, Double> massKg = new EnumMap<>(Fuel.class);
+    private final LinkedHashMap<Fuel, Double> massKg = new LinkedHashMap<>();
 
     public void add(Fuel fuel, double amountKg) {
         if (!Double.isFinite(amountKg) || amountKg <= 0.0) {
