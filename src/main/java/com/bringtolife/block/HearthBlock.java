@@ -1,5 +1,6 @@
 package com.bringtolife.block;
 
+import com.bringtolife.sim.Fuel;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockRenderType;
@@ -17,6 +18,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.IntProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -27,16 +29,16 @@ import net.minecraft.world.World;
 public class HearthBlock extends BlockWithEntity implements BlockEntityProvider {
 
     public static final BooleanProperty LIT = Properties.LIT;
-    public static final double EXPOSED_AREA_M2 = 0.25;
+    public static final IntProperty HEAT = IntProperty.of("heat", 0, 3);
 
     public HearthBlock(Settings settings) {
         super(settings);
-        setDefaultState(getDefaultState().with(LIT, false));
+        setDefaultState(getDefaultState().with(LIT, false).with(HEAT, 0));
     }
 
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        builder.add(LIT);
+        builder.add(LIT, HEAT);
     }
 
     @Override
@@ -61,8 +63,8 @@ public class HearthBlock extends BlockWithEntity implements BlockEntityProvider 
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         ItemStack stack = player.getStackInHand(hand);
-        double fuelKg = fuelValueKg(stack);
-        if (fuelKg <= 0.0) {
+        Fuel fuel = fuelFor(stack);
+        if (fuel == null) {
             return ActionResult.PASS;
         }
         if (world.isClient) {
@@ -71,25 +73,25 @@ public class HearthBlock extends BlockWithEntity implements BlockEntityProvider 
         if (!(world.getBlockEntity(pos) instanceof HearthBlockEntity hearth)) {
             return ActionResult.PASS;
         }
-        hearth.addFuel(fuelKg);
+        hearth.addFuel(fuel);
         if (!player.getAbilities().creativeMode) {
             stack.decrement(1);
         }
         world.setBlockState(pos, state.with(LIT, true), Block.NOTIFY_LISTENERS);
-        world.playSound(null, pos, SoundEvents.ITEM_FIRE_CHARGE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+        world.playSound(null, pos, SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.BLOCKS, 1.0F, 1.0F);
         return ActionResult.SUCCESS;
     }
 
-    public static double fuelValueKg(ItemStack stack) {
+    public static Fuel fuelFor(ItemStack stack) {
         if (stack.isIn(ItemTags.LOGS)) {
-            return 5.0;
+            return Fuel.LOG;
         }
         if (stack.isIn(ItemTags.PLANKS)) {
-            return 1.0;
+            return Fuel.PLANK;
         }
         if (stack.isOf(Items.STICK)) {
-            return 0.05;
+            return Fuel.STICK;
         }
-        return 0.0;
+        return null;
     }
 }

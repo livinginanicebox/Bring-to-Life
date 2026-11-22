@@ -29,11 +29,29 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          grep -E "error: |FAILED|What went wrong|Could not resolve|Caused by:" build.log | head -25 | while IFS= read -r line; do
+          python3 - <<'PY' > errors.txt
+          import os
+          import re
+
+          if not os.path.exists('build.log'):
+              print('build.log missing: gradle did not run')
+              raise SystemExit(0)
+
+          lines = open('build.log', errors='replace').read().splitlines()
+          keep = []
+          pattern = re.compile(r'error:|What went wrong|Could not resolve|Caused by:|FAILED|symbol:|location:')
+          for index, line in enumerate(lines):
+              if re.search(r'error:|What went wrong|Could not resolve|Caused by:', line):
+                  keep.extend(lines[index:index + 8])
+                  keep.append('----')
+          print('\n'.join(keep[:200]))
+          PY
+          test -s errors.txt || echo "no error lines captured" > errors.txt
+          sed '/^$/d' errors.txt | head -40 | while IFS= read -r line; do
             echo "::error title=gradle::$line"
           done
           gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
-            -f body="$(printf 'CI build failed:\n\n%s' "$(tail -c 5000 build.log)")" || true
+            -f body="$(printf 'CI build failed:\n\n%s' "$(head -c 6000 errors.txt)")" || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:

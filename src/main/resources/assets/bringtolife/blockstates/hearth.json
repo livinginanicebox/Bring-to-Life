@@ -1,6 +1,12 @@
 {
   "variants": {
-    "lit=false": { "model": "bringtolife:block/hearth" },
-    "lit=true": { "model": "bringtolife:block/hearth_lit" }
+    "heat=0,lit=false": { "model": "bringtolife:block/hearth" },
+    "heat=1,lit=false": { "model": "bringtolife:block/hearth" },
+    "heat=2,lit=false": { "model": "bringtolife:block/hearth" },
+    "heat=3,lit=false": { "model": "bringtolife:block/hearth" },
+    "heat=0,lit=true": { "model": "bringtolife:block/hearth_1" },
+    "heat=1,lit=true": { "model": "bringtolife:block/hearth_1" },
+    "heat=2,lit=true": { "model": "bringtolife:block/hearth_2" },
+    "heat=3,lit=true": { "model": "bringtolife:block/hearth_3" }
   }
 }

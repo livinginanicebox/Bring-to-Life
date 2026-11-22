@@ -29,7 +29,7 @@ class AirSpaceTest {
 
     @Test
     void woodStoichiometryFollowsFromCellulose() {
-        Fuel wood = Fuel.DRY_WOOD;
+        Fuel wood = Fuel.LOG;
 
         assertEquals(0.16214, wood.molarMassKgPerMol(), 1e-5);
         assertEquals(37.0, wood.oxygenDemandMolPerKg(), 0.1);
@@ -43,14 +43,14 @@ class AirSpaceTest {
     void burningConsumesOxygenAndReleasesProducts() {
         AirSpace space = AirSpace.sealed(1000.0);
 
-        BurnResult result = space.burn(Fuel.DRY_WOOD, 0.005, AREA, STEP);
+        BurnResult result = space.burn(Fuel.LOG, 0.005, AREA, STEP);
         Burn burn = result.burn();
 
         assertEquals(0.005, burn.fuelKg(), 1e-12);
-        assertEquals(0.005 * Fuel.DRY_WOOD.oxygenDemandMolPerKg(), burn.oxygenConsumedMol(), 1e-9);
-        assertEquals(0.005 * Fuel.DRY_WOOD.carbonDioxideMolPerKg(), burn.carbonDioxideProducedMol(), 1e-9);
-        assertEquals(0.005 * Fuel.DRY_WOOD.waterMassKgPerKg(), burn.waterKg(), 1e-12);
-        assertEquals(0.005 * Fuel.DRY_WOOD.lowerHeatingValueJPerKg(), burn.heatJ(), 1e-3);
+        assertEquals(0.005 * Fuel.LOG.oxygenDemandMolPerKg(), burn.oxygenConsumedMol(), 1e-9);
+        assertEquals(0.005 * Fuel.LOG.carbonDioxideMolPerKg(), burn.carbonDioxideProducedMol(), 1e-9);
+        assertEquals(0.005 * Fuel.LOG.waterMassKgPerKg(), burn.waterKg(), 1e-12);
+        assertEquals(0.005 * Fuel.LOG.lowerHeatingValueJPerKg(), burn.heatJ(), 1e-3);
         assertEquals(5.0e-3, burn.massFluxKgPerM2S(), 1e-12);
         assertFalse(burn.limitedByOxygen());
         assertFalse(burn.extinguished());
@@ -60,7 +60,7 @@ class AirSpaceTest {
     void gasMassIsConservedApartFromTheWaterThatLeaves() {
         AirSpace space = AirSpace.sealed(6.0);
 
-        BurnResult result = space.burn(Fuel.DRY_WOOD, 0.4, AREA, STEP);
+        BurnResult result = space.burn(Fuel.LOG, 0.4, AREA, STEP);
         double massGain = result.space().mixture().massKg() - space.mixture().massKg();
 
         assertEquals(result.burn().fuelKg() - result.burn().waterKg(), massGain, 1e-12);
@@ -73,7 +73,7 @@ class AirSpaceTest {
         double fuelBurned = 0.0;
 
         while (elapsed < 1000.0) {
-            BurnResult result = space.burn(Fuel.DRY_WOOD, Fuel.DRY_WOOD.burningRateKgPerS(AREA) * STEP, AREA, STEP);
+            BurnResult result = space.burn(Fuel.LOG, Fuel.LOG.burningRateKgPerS(AREA) * STEP, AREA, STEP);
             if (result.burn().extinguished()) {
                 break;
             }
@@ -97,7 +97,7 @@ class AirSpaceTest {
         change.put(Gas.NITROGEN, displaced);
         AirSpace depleted = new AirSpace(27.0, fresh.mixture().withChange(change), 0.0);
 
-        BurnResult result = depleted.burn(Fuel.DRY_WOOD, 1.0, AREA, STEP);
+        BurnResult result = depleted.burn(Fuel.LOG, 1.0, AREA, STEP);
 
         assertTrue(result.burn().extinguished());
         assertEquals(0.0, result.burn().fuelKg());
@@ -108,7 +108,7 @@ class AirSpaceTest {
     void aFlameDiesWhenItsMassFluxFallsBelowTheCriticalValue() {
         AirSpace space = AirSpace.sealed(27.0);
 
-        BurnResult result = space.burn(Fuel.DRY_WOOD, 1.0e-5, AREA, STEP);
+        BurnResult result = space.burn(Fuel.LOG, 1.0e-5, AREA, STEP);
 
         assertTrue(result.burn().extinguished());
         assertEquals(0.0, result.burn().fuelKg());
@@ -133,11 +133,11 @@ class AirSpaceTest {
     @Test
     void aVentilatedFireKeepsBurning() {
         AirSpace space = AirSpace.ventilated(27.0, 30.0);
-        double rate = Fuel.DRY_WOOD.burningRateKgPerS(AREA);
+        double rate = Fuel.LOG.burningRateKgPerS(AREA);
 
         for (int step = 0; step < 600; step++) {
             space = space.ventilate(STEP);
-            BurnResult result = space.burn(Fuel.DRY_WOOD, rate * STEP, AREA, STEP);
+            BurnResult result = space.burn(Fuel.LOG, rate * STEP, AREA, STEP);
             assertFalse(result.burn().extinguished());
             space = result.space();
         }
@@ -158,9 +158,9 @@ class AirSpaceTest {
     void invalidRequestsAreRejected() {
         AirSpace space = AirSpace.sealed(27.0);
 
-        assertThrows(IllegalArgumentException.class, () -> space.burn(Fuel.DRY_WOOD, -1.0, AREA, STEP));
-        assertThrows(IllegalArgumentException.class, () -> space.burn(Fuel.DRY_WOOD, 1.0, 0.0, STEP));
-        assertThrows(IllegalArgumentException.class, () -> space.burn(Fuel.DRY_WOOD, 1.0, AREA, 0.0));
+        assertThrows(IllegalArgumentException.class, () -> space.burn(Fuel.LOG, -1.0, AREA, STEP));
+        assertThrows(IllegalArgumentException.class, () -> space.burn(Fuel.LOG, 1.0, 0.0, STEP));
+        assertThrows(IllegalArgumentException.class, () -> space.burn(Fuel.LOG, 1.0, AREA, 0.0));
         assertThrows(IllegalArgumentException.class, () -> AirSpace.sealed(0.0));
         assertThrows(IllegalArgumentException.class, () -> AirSpace.ventilated(27.0, -1.0));
         assertThrows(IllegalArgumentException.class, () -> space.ventilate(-1.0));
@@ -169,10 +169,10 @@ class AirSpaceTest {
 
     private static double fuelBurnedBeforeExtinction(double step) {
         AirSpace space = AirSpace.sealed(27.0);
-        double rate = Fuel.DRY_WOOD.burningRateKgPerS(AREA);
+        double rate = Fuel.LOG.burningRateKgPerS(AREA);
         double burned = 0.0;
         for (int i = 0; i < (int) (1000.0 / step); i++) {
-            BurnResult result = space.burn(Fuel.DRY_WOOD, rate * step, AREA, step);
+            BurnResult result = space.burn(Fuel.LOG, rate * step, AREA, step);
             if (result.burn().extinguished()) {
                 return burned;
             }

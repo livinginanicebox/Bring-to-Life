@@ -9,7 +9,8 @@ public record Fuel(
         double densityKgPerM3,
         double regressionRateMPerS,
         double flamingOxygenMoleFraction,
-        double criticalMassFluxKgPerM2S
+        double criticalMassFluxKgPerM2S,
+        double pieceThicknessM
 ) {
 
     public Fuel {
@@ -23,6 +24,7 @@ public record Fuel(
         requirePositive(densityKgPerM3, "density");
         requirePositive(regressionRateMPerS, "surface regression rate");
         requirePositive(criticalMassFluxKgPerM2S, "critical mass flux");
+        requirePositive(pieceThicknessM, "piece thickness");
         if (!(flamingOxygenMoleFraction > 0.0 && flamingOxygenMoleFraction < 1.0)) {
             throw new IllegalArgumentException("flaming oxygen limit must be a mole fraction");
         }
@@ -34,14 +36,19 @@ public record Fuel(
         }
     }
 
-    public static final Fuel DRY_WOOD = new Fuel(
-            "dry wood",
-            6, 10, 5,
-            16_100_000.0,
-            600.0,
-            1.0e-5,
-            0.15,
-            4.0e-3
+    public static final Fuel LOG = new Fuel(
+            "log", 6, 10, 5,
+            16_100_000.0, 600.0, 1.0e-5, 0.15, 4.0e-3, 0.10
+    );
+
+    public static final Fuel PLANK = new Fuel(
+            "plank", 6, 10, 5,
+            16_100_000.0, 600.0, 1.0e-5, 0.15, 4.0e-3, 0.02
+    );
+
+    public static final Fuel STICK = new Fuel(
+            "stick", 6, 10, 5,
+            16_100_000.0, 600.0, 1.0e-5, 0.15, 4.0e-3, 0.005
     );
 
     public double molarMassKgPerMol() {
@@ -75,11 +82,22 @@ public record Fuel(
         return densityKgPerM3 * regressionRateMPerS;
     }
 
+    public double exposedAreaM2(double massKg) {
+        if (!Double.isFinite(massKg) || massKg < 0.0) {
+            throw new IllegalArgumentException("fuel mass must be finite and non-negative");
+        }
+        return massKg / (densityKgPerM3 * pieceThicknessM);
+    }
+
     public double burningRateKgPerS(double exposedAreaM2) {
         if (!Double.isFinite(exposedAreaM2) || exposedAreaM2 < 0.0) {
             throw new IllegalArgumentException("exposed area must be finite and non-negative");
         }
         return massFluxKgPerM2S() * exposedAreaM2;
+    }
+
+    public double burnThroughSeconds() {
+        return densityKgPerM3 * pieceThicknessM / massFluxKgPerM2S();
     }
 
     double ceilingDenominator() {
