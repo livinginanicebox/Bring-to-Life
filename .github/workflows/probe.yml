@@ -1,0 +1,11 @@
+name: probe
+on:
+  push:
+    branches: ["arena/4bb8ee31-bring-to-life"]
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: java -version && echo probe-ok
