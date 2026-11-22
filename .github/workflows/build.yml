@@ -39,12 +39,25 @@ jobs:
 
           lines = open('build.log', errors='replace').read().splitlines()
           keep = []
-          pattern = re.compile(r'error:|What went wrong|Could not resolve|Caused by:|FAILED|symbol:|location:')
           for index, line in enumerate(lines):
               if re.search(r'error:|What went wrong|Could not resolve|Caused by:', line):
                   keep.extend(lines[index:index + 8])
                   keep.append('----')
           print('\n'.join(keep[:200]))
+
+          import glob
+          import xml.etree.ElementTree as ET
+
+          for path in sorted(glob.glob('build/test-results/test/*.xml')):
+              try:
+                  root = ET.parse(path).getroot()
+              except ET.ParseError:
+                  continue
+              for case in root.iter('testcase'):
+                  for failure in case.findall('failure') + case.findall('error'):
+                      message = (failure.get('message') or '').strip().replace('\n', ' ')
+                      print('TEST %s.%s: %s' % (case.get('classname'), case.get('name'), message[:400]))
+                      print('----')
           PY
           test -s errors.txt || echo "no error lines captured" > errors.txt
           sed '/^$/d' errors.txt | head -40 | while IFS= read -r line; do

@@ -28,10 +28,12 @@ public record Fuel(
         if (!(flamingOxygenMoleFraction > 0.0 && flamingOxygenMoleFraction < 1.0)) {
             throw new IllegalArgumentException("flaming oxygen limit must be a mole fraction");
         }
-        if (!(oxygenDemandMolPerMol() > 0.0)) {
+        double demandPerMol = carbonAtoms + hydrogenAtoms / 4.0 - oxygenAtoms / 2.0;
+        if (!(demandPerMol > 0.0)) {
             throw new IllegalArgumentException("a fuel must consume oxygen when it burns");
         }
-        if (ceilingDenominator() <= 0.0) {
+        double ceiling = demandPerMol + flamingOxygenMoleFraction * (carbonAtoms - demandPerMol);
+        if (ceiling <= 0.0) {
             throw new IllegalArgumentException("fuel composition leaves no stable oxygen ceiling");
         }
     }
@@ -98,10 +100,6 @@ public record Fuel(
 
     public double burnThroughSeconds() {
         return densityKgPerM3 * pieceThicknessM / massFluxKgPerM2S();
-    }
-
-    double ceilingDenominator() {
-        return oxygenDemandMolPerMol() + flamingOxygenMoleFraction * (carbonDioxideMolPerMol() - oxygenDemandMolPerMol());
     }
 
     private static void requirePositive(double value, String label) {
