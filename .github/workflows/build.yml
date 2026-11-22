@@ -30,8 +30,26 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PY' > errors.txt
+          import glob
           import os
           import re
+          import xml.etree.ElementTree as ET
+
+          for path in sorted(glob.glob('build/test-results/**/*.xml', recursive=True)):
+              try:
+                  root = ET.parse(path).getroot()
+              except ET.ParseError:
+                  continue
+              for case in root.iter('testcase'):
+                  for failure in list(case.findall('failure')) + list(case.findall('error')):
+                      message = (failure.get('message') or '').strip().replace('\n', ' ')
+                      print('TEST %s.%s' % (case.get('classname'), case.get('name')))
+                      print('     %s' % (message[:300] or '(no message)'))
+                      clean = [line for line in (failure.text or '').splitlines()
+                               if line.strip() and not line.strip().startswith('at ')]
+                      for line in clean[:6]:
+                          print('     %s' % line.strip()[:200])
+                      print('----')
 
           if not os.path.exists('build.log'):
               print('build.log missing: gradle did not run')
@@ -41,30 +59,17 @@ jobs:
           keep = []
           for index, line in enumerate(lines):
               if re.search(r'error:|What went wrong|Could not resolve|Caused by:', line):
-                  keep.extend(lines[index:index + 8])
+                  block = [l for l in lines[index:index + 8] if not l.strip().startswith('at ')]
+                  keep.extend(block)
                   keep.append('----')
-          print('\n'.join(keep[:200]))
-
-          import glob
-          import xml.etree.ElementTree as ET
-
-          for path in sorted(glob.glob('build/test-results/test/*.xml')):
-              try:
-                  root = ET.parse(path).getroot()
-              except ET.ParseError:
-                  continue
-              for case in root.iter('testcase'):
-                  for failure in case.findall('failure') + case.findall('error'):
-                      message = (failure.get('message') or '').strip().replace('\n', ' ')
-                      print('TEST %s.%s: %s' % (case.get('classname'), case.get('name'), message[:400]))
-                      print('----')
+          print('\n'.join(keep[:60]))
           PY
-          test -s errors.txt || echo "no error lines captured" > errors.txt
-          sed '/^$/d' errors.txt | head -40 | while IFS= read -r line; do
+          test -s errors.txt || echo "no failure detail captured" > errors.txt
+          grep -v '^$' errors.txt | head -50 | while IFS= read -r line; do
             echo "::error title=gradle::$line"
           done
-          gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" \
-            -f body="$(printf 'CI build failed:\n\n%s' "$(head -c 6000 errors.txt)")" || true
+          python3 -c "import json;print(json.dumps({'body':open('errors.txt').read()[:6000]}))" \
+            | gh api -X POST "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" --input - || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
